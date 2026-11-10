@@ -40,7 +40,7 @@ Report → Classify → Prioritize → Assign → Investigate → Resolve → Ve
 | Layer | Choice |
 |---|---|
 | Language | Java 21 |
-| Backend | Spring Boot 3.x (Maven) |
+| Backend | Spring Boot 4.1.x (Maven) |
 | Frontend | Thymeleaf + Bootstrap 5, Chart.js (optional HTMX) |
 | Database | PostgreSQL (Docker Compose locally), Spring Data JPA |
 | Security | Spring Security form login, BCrypt, role-based access |
