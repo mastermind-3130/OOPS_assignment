@@ -4,6 +4,7 @@ import com.itsm.domain.audit.AuditLog;
 import com.itsm.domain.catalog.ItService;
 import com.itsm.domain.incident.Incident;
 import com.itsm.domain.user.Employee;
+import com.itsm.domain.enums.IncidentStatus;
 import com.itsm.dto.IncidentForm;
 import com.itsm.exception.IncidentNotFoundException;
 import com.itsm.exception.ServiceNotFoundException;
@@ -11,6 +12,8 @@ import com.itsm.repository.AuditLogRepository;
 import com.itsm.repository.IncidentRepository;
 import com.itsm.repository.ItServiceRepository;
 import com.itsm.state.IncidentLifecycle;
+import com.itsm.domain.user.Technician;
+import com.itsm.domain.user.User;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,11 +33,11 @@ import org.springframework.transaction.annotation.Transactional;
         }
 
         public Incident findById(Long id) {
-            return incidentRepository.findById(id).orElseThrow(() -> new IncidentNotFoundException(" Incident "+ id+" not found "));
+            return incidentRepository.findById(id).orElseThrow(() -> new IncidentNotFoundException("Incident "+ id+" not found"));
         }
         public Incident create(IncidentForm form,Employee reporter){
             //get the service the employee picked
-            ItService service = serviceRepository.findById(form.getServiceId()).orElseThrow(() -> new ServiceNotFoundException(" Service "+form.getServiceId()+" not found"));
+            ItService service = serviceRepository.findById(form.getServiceId()).orElseThrow(() -> new ServiceNotFoundException("Service "+form.getServiceId()+" not found"));
             //build the incident object
             Incident incident = new Incident(form.getTitle(), form.getDescription(), reporter, service, form.getImpact(), form.getUrgency(), form.getAffectedUsers());
 
@@ -45,7 +48,21 @@ import org.springframework.transaction.annotation.Transactional;
 
                 return savedIncident;
         }
+        private Incident changeStatus(Incident incident, IncidentStatus next , User actor, String action, String description){
+            String previous = incident.getStatus().name();
+            //making the move to the next status
+            lifecycle.moveTo(incident, next);
+            Incident savedIncident = incidentRepository.save(incident);
+               auditLogRepository.save(new AuditLog(actor.getUsername(), action,
+                savedIncident.getId(), previous, next.name(), description));
+                return savedIncident;
+
+        }
+        public Incident acknowledge(Long id, Technician technician){
+            Incident incident = findById(id);
+            return changeStatus(incident, IncidentStatus.ACKNOWLEDGED, technician,
+                    "ACKNOWLEDGED", technician.getFullName() + " acknowledged " + incident.getReference());
+        }
 
 
     }
-
