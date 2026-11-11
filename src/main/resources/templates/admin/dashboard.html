@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Admin dashboard')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<div class="container">
+    <h1 class="h3 mb-4">Incident overview</h1>
+
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-lg-2">
+            <div class="card stat-card"><div class="card-body">
+                <div class="stat-label">Total</div>
+                <div class="stat-value" th:text="${overview.totalIncidents}">0</div>
+            </div></div>
+        </div>
+        <div class="col-6 col-lg-2">
+            <div class="card stat-card"><div class="card-body">
+                <div class="stat-label">Open</div>
+                <div class="stat-value" th:text="${overview.openIncidents}">0</div>
+            </div></div>
+        </div>
+        <div class="col-6 col-lg-2">
+            <div class="card stat-card border-danger"><div class="card-body">
+                <div class="stat-label">Critical open</div>
+                <div class="stat-value text-danger" th:text="${overview.criticalOpenIncidents}">0</div>
+            </div></div>
+        </div>
+        <div class="col-6 col-lg-2">
+            <div class="card stat-card"><div class="card-body">
+                <div class="stat-label">Resolved</div>
+                <div class="stat-value" th:text="${overview.resolvedIncidents}">0</div>
+            </div></div>
+        </div>
+        <div class="col-6 col-lg-2">
+            <div class="card stat-card"><div class="card-body">
+                <div class="stat-label">SLA violations</div>
+                <div class="stat-value" th:text="${overview.slaViolations}">0</div>
+            </div></div>
+        </div>
+        <div class="col-6 col-lg-2">
+            <div class="card stat-card"><div class="card-body">
+                <div class="stat-label">Users</div>
+                <div class="stat-value" th:text="${overview.totalUsers}">0</div>
+            </div></div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header fw-semibold">Manage</div>
+                <!-- TODO: each feature replaces its "#" with a real page under /admin/... -->
+                <div class="list-group list-group-flush">
+                    <a href="#" class="list-group-item list-group-item-action disabled">Users &amp; technicians</a>
+                    <a href="#" class="list-group-item list-group-item-action disabled">IT services</a>
+                    <a href="#" class="list-group-item list-group-item-action disabled">Categories</a>
+                    <a href="#" class="list-group-item list-group-item-action disabled">SLA policies</a>
+                    <a href="#" class="list-group-item list-group-item-action disabled">Assignment strategy</a>
+                    <a href="#" class="list-group-item list-group-item-action disabled">All incidents &amp; search</a>
+                    <a href="#" class="list-group-item list-group-item-action disabled">Reports</a>
+                    <a href="#" class="list-group-item list-group-item-action disabled">Audit log</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header fw-semibold">Recent activity</div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-sm mb-0 align-middle">
+                            <thead class="table-light">
+                            <tr><th>Time</th><th>User</th><th>Action</th><th>Details</th></tr>
+                            </thead>
+                            <tbody>
+                            <tr th:if="${#lists.isEmpty(recentActivity)}">
+                                <td colspan="4" class="text-center text-muted py-3">No activity yet.</td>
+                            </tr>
+                            <tr th:each="a : ${recentActivity}">
+                                <td class="small text-nowrap" th:text="${#temporals.format(a.timestamp, 'dd MMM, HH:mm')}">time</td>
+                                <td th:text="${a.actor}">user</td>
+                                <td><code th:text="${a.action}">ACTION</code></td>
+                                <td class="small" th:text="${a.description}">details</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>

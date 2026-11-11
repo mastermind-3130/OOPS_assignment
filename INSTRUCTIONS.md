@@ -112,6 +112,8 @@ itsm/
 - `Impact` { LOW, MEDIUM, HIGH }
 - `Urgency` { LOW, MEDIUM, HIGH }
 - `Role` { EMPLOYEE, TECHNICIAN, ADMIN }
+- `BusinessCriticality` { LOW, MEDIUM, HIGH, CRITICAL } (on `ItService`)
+- `SlaType` { RESPONSE, RESOLUTION } (on `SlaViolation`)
 
 **Design patterns**
 | Pattern | Where |
@@ -171,10 +173,9 @@ itsm/
 
 ## 9. Setup progress
 
-- [ ] Step 1: Add INSTRUCTIONS.md to repo
-- [ ] Step 2: Generate Spring Boot project into the repo folder
-- [ ] Step 3: Create package folders
-- [ ] Step 4: .gitignore, application.properties, docker-compose.yml
-- [ ] Step 5: Run the app locally against PostgreSQL
-- [ ] Step 6: README + CI workflow
-- [ ] Step 7: Push and add collaborators
+- [x] Project skeleton, PostgreSQL connection, package folders
+- [x] Enums and User hierarchy
+- [x] Entities, repositories, sample data
+- [x] Security (database logins, BCrypt, roles)
+- [x] Login page and the three role dashboards
+- [ ] Features: see TEAM_GUIDE.md

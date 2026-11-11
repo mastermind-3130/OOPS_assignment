@@ -1,0 +1,30 @@
+/* Small additions on top of Bootstrap. */
+
+.stat-card .stat-label {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #6c757d;
+}
+
+.stat-card .stat-value {
+    font-size: 1.75rem;
+    font-weight: 600;
+}
+
+/* Priority badges: class is "priority-" + enum name */
+.priority-P1 { background-color: #dc3545; color: #fff; }
+.priority-P2 { background-color: #fd7e14; color: #fff; }
+.priority-P3 { background-color: #0dcaf0; color: #000; }
+.priority-P4 { background-color: #6c757d; color: #fff; }
+
+/* Status badges: class is "status-" + enum name */
+.status-NEW          { background-color: #e9ecef; color: #212529; }
+.status-CLASSIFIED   { background-color: #dee2e6; color: #212529; }
+.status-ASSIGNED     { background-color: #cfe2ff; color: #084298; }
+.status-ACKNOWLEDGED { background-color: #cfe2ff; color: #084298; }
+.status-IN_PROGRESS  { background-color: #fff3cd; color: #664d03; }
+.status-PENDING_INFO { background-color: #ffe5d0; color: #8a3f00; }
+.status-RESOLVED     { background-color: #d1e7dd; color: #0f5132; }
+.status-VERIFIED     { background-color: #d1e7dd; color: #0f5132; }
+.status-CLOSED       { background-color: #adb5bd; color: #212529; }
