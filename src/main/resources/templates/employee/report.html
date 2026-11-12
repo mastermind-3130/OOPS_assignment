@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Report an incident')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<div class="container" style="max-width: 720px;">
+    <h1 class="h3 mb-1">Report an incident</h1>
+    <p class="text-muted mb-4">Describe the problem. The IT team will pick it up from here.</p>
+
+    <div th:if="${error}" class="alert alert-danger" th:text="${error}">Error</div>
+
+    <div class="card">
+        <div class="card-body p-4">
+            <form th:action="@{/employee/incidents}" th:object="${form}" method="post">
+
+                <div class="mb-3">
+                    <label for="title" class="form-label">Title</label>
+                    <input type="text" id="title" th:field="*{title}" class="form-control"
+                           th:classappend="${#fields.hasErrors('title')} ? 'is-invalid'"
+                           placeholder="Short summary, e.g. Payment page not loading">
+                    <div class="invalid-feedback" th:errors="*{title}">Title error</div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="description" class="form-label">Description</label>
+                    <textarea id="description" th:field="*{description}" rows="4" class="form-control"
+                              th:classappend="${#fields.hasErrors('description')} ? 'is-invalid'"
+                              placeholder="What happened? What were you trying to do? Any error message?"></textarea>
+                    <div class="invalid-feedback" th:errors="*{description}">Description error</div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="serviceId" class="form-label">Affected service</label>
+                    <select id="serviceId" th:field="*{serviceId}" class="form-select"
+                            th:classappend="${#fields.hasErrors('serviceId')} ? 'is-invalid'">
+                        <option value="">Choose a service</option>
+                        <option th:each="s : ${services}" th:value="${s.id}" th:text="${s.name}">Service</option>
+                    </select>
+                    <div class="invalid-feedback" th:errors="*{serviceId}">Service error</div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label for="impact" class="form-label">Impact</label>
+                        <select id="impact" th:field="*{impact}" class="form-select"
+                                th:classappend="${#fields.hasErrors('impact')} ? 'is-invalid'">
+                            <option value="">Choose</option>
+                            <option th:each="i : ${impacts}" th:value="${i}" th:text="${i}">LOW</option>
+                        </select>
+                        <div class="form-text">How much work is blocked?</div>
+                        <div class="invalid-feedback" th:errors="*{impact}">Impact error</div>
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+                        <label for="urgency" class="form-label">Urgency</label>
+                        <select id="urgency" th:field="*{urgency}" class="form-select"
+                                th:classappend="${#fields.hasErrors('urgency')} ? 'is-invalid'">
+                            <option value="">Choose</option>
+                            <option th:each="u : ${urgencies}" th:value="${u}" th:text="${u}">LOW</option>
+                        </select>
+                        <div class="form-text">How soon is a fix needed?</div>
+                        <div class="invalid-feedback" th:errors="*{urgency}">Urgency error</div>
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+                        <label for="affectedUsers" class="form-label">People affected</label>
+                        <input type="number" id="affectedUsers" th:field="*{affectedUsers}" min="1" class="form-control"
+                               th:classappend="${#fields.hasErrors('affectedUsers')} ? 'is-invalid'">
+                        <div class="invalid-feedback" th:errors="*{affectedUsers}">Affected users error</div>
+                    </div>
+                </div>
+
+                <div class="d-flex gap-2 mt-2">
+                    <button type="submit" class="btn btn-primary">Submit incident</button>
+                    <a th:href="@{/employee/dashboard}" class="btn btn-outline-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>

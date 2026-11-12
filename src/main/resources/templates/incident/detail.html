@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(${incident.reference})}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<div class="container">
+
+    <a th:href="@{${backUrl}}" class="small text-decoration-none">&larr; Back to dashboard</a>
+
+    <!-- ===== heading ===== -->
+    <div class="d-flex flex-wrap justify-content-between align-items-start mt-2 mb-3 gap-2">
+        <div>
+            <h1 class="h3 mb-1">
+                <span th:text="${incident.reference}">INC0001</span>:
+                <span th:text="${incident.title}">Title</span>
+            </h1>
+            <span class="badge" th:classappend="'status-' + ${incident.status}"
+                  th:text="${incident.status.label}">New</span>
+            <span th:if="${incident.priority != null}" class="badge"
+                  th:classappend="'priority-' + ${incident.priority}"
+                  th:text="${incident.priority.name() + ' ' + incident.priority.label}">P1</span>
+        </div>
+    </div>
+
+    <!-- ===== messages after an action ===== -->
+    <div th:if="${success}" class="alert alert-success" th:text="${success}">Done</div>
+    <div th:if="${error}" class="alert alert-danger" th:text="${error}">Error</div>
+
+    <div class="row g-4">
+
+        <!-- ================= left column ================= -->
+        <div class="col-lg-8">
+
+            <div class="card mb-4">
+                <div class="card-header fw-semibold">Description</div>
+                <div class="card-body">
+                    <p class="mb-0" style="white-space: pre-line;" th:text="${incident.description}">Description</p>
+                </div>
+            </div>
+
+            <div class="card mb-4 border-success" th:if="${incident.resolutionSummary != null}">
+                <div class="card-header fw-semibold">Resolution</div>
+                <div class="card-body">
+                    <p class="mb-0" style="white-space: pre-line;" th:text="${incident.resolutionSummary}">Resolution</p>
+                </div>
+            </div>
+
+            <div class="card mb-4" th:if="${incident.feedback != null}">
+                <div class="card-header fw-semibold">Reporter feedback</div>
+                <div class="card-body">
+                    <strong th:text="${incident.feedback.rating} + ' / 5'">5 / 5</strong>
+                    <p class="mb-0 mt-1" th:if="${incident.feedback.comment != null}"
+                       th:text="${incident.feedback.comment}">Comment</p>
+                </div>
+            </div>
+
+            <!-- ----- notes ----- -->
+            <div class="card mb-4">
+                <div class="card-header fw-semibold">Notes</div>
+                <div class="card-body">
+                    <p class="text-muted mb-3" th:if="${#lists.isEmpty(incident.notes)}">No notes yet.</p>
+
+                    <div class="mb-3 pb-3 border-bottom" th:each="n : ${incident.notes}">
+                        <div class="small text-muted">
+                            <strong th:text="${n.author.fullName}">Author</strong>
+                            (<span th:text="${n.author.role}">ROLE</span>)
+                            &middot;
+                            <span th:text="${#temporals.format(n.createdAt, 'dd MMM yyyy, HH:mm')}">time</span>
+                        </div>
+                        <div style="white-space: pre-line;" th:text="${n.content}">Note text</div>
+                    </div>
+
+                    <form th:if="${canAddNote}" th:action="@{/incidents/{id}/notes(id=${incident.id})}" method="post">
+                        <label for="content" class="form-label">Add a note</label>
+                        <textarea id="content" name="content" rows="2" class="form-control mb-2" required
+                                  placeholder="Investigation details, extra information, questions..."></textarea>
+                        <button type="submit" class="btn btn-outline-primary btn-sm">Add note</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- ----- history ----- -->
+            <div class="card mb-4">
+                <div class="card-header fw-semibold">History</div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-sm mb-0 align-middle">
+                            <thead class="table-light">
+                            <tr><th>Time</th><th>User</th><th>From</th><th>To</th><th>Details</th></tr>
+                            </thead>
+                            <tbody>
+                            <tr th:if="${#lists.isEmpty(history)}">
+                                <td colspan="5" class="text-center text-muted py-3">No history yet.</td>
+                            </tr>
+                            <tr th:each="h : ${history}">
+                                <td class="small text-nowrap" th:text="${#temporals.format(h.timestamp, 'dd MMM, HH:mm')}">time</td>
+                                <td th:text="${h.actor}">user</td>
+                                <td class="small" th:text="${h.previousState != null ? h.previousState : '-'}">-</td>
+                                <td class="small" th:text="${h.newState != null ? h.newState : '-'}">NEW</td>
+                                <td class="small" th:text="${h.description}">details</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= right column ================= -->
+        <div class="col-lg-4">
+
+            <!-- ----- actions: each block only appears when it is allowed ----- -->
+            <div class="card mb-4">
+                <div class="card-header fw-semibold">Actions</div>
+                <div class="card-body d-grid gap-3">
+
+                    <form th:if="${canAssign}" th:action="@{/incidents/{id}/assign(id=${incident.id})}" method="post">
+                        <label for="technicianId" class="form-label">Assign to technician</label>
+                        <select id="technicianId" name="technicianId" class="form-select mb-2" required>
+                            <option value="">Choose a technician</option>
+                            <option th:each="t : ${technicians}" th:value="${t.id}"
+                                    th:text="${t.fullName + ' (' + #strings.setJoin(t.skills, ', ') + ')'}">Technician</option>
+                        </select>
+                        <button type="submit" class="btn btn-primary w-100">Assign</button>
+                    </form>
+
+                    <form th:if="${canAcknowledge}" th:action="@{/incidents/{id}/acknowledge(id=${incident.id})}" method="post">
+                        <button type="submit" class="btn btn-primary w-100">Acknowledge</button>
+                    </form>
+
+                    <form th:if="${canStart}" th:action="@{/incidents/{id}/start(id=${incident.id})}" method="post">
+                        <button type="submit" class="btn btn-primary w-100">Start work</button>
+                    </form>
+
+                    <form th:if="${canResolve}" th:action="@{/incidents/{id}/resolve(id=${incident.id})}" method="post">
+                        <label for="summary" class="form-label">Resolution</label>
+                        <textarea id="summary" name="summary" rows="3" class="form-control mb-2" required
+                                  placeholder="What was the cause and how was it fixed?"></textarea>
+                        <button type="submit" class="btn btn-success w-100">Mark as resolved</button>
+                    </form>
+
+                    <form th:if="${canRequestInfo}" th:action="@{/incidents/{id}/request-info(id=${incident.id})}" method="post">
+                        <button type="submit" class="btn btn-outline-secondary w-100">Request more information</button>
+                    </form>
+
+                    <form th:if="${canProvideInfo}" th:action="@{/incidents/{id}/provide-info(id=${incident.id})}" method="post">
+                        <p class="small text-muted mb-2">The technician needs more information. Add it as a note, then click below.</p>
+                        <button type="submit" class="btn btn-primary w-100">I have added the information</button>
+                    </form>
+
+                    <form th:if="${canConfirm}" th:action="@{/incidents/{id}/confirm(id=${incident.id})}" method="post">
+                        <button type="submit" class="btn btn-success w-100">Confirm it is fixed</button>
+                    </form>
+
+                    <form th:if="${canClose}" th:action="@{/incidents/{id}/close(id=${incident.id})}" method="post">
+                        <button type="submit" class="btn btn-secondary w-100">Close incident</button>
+                    </form>
+
+                    <form th:if="${canFeedback}" th:action="@{/incidents/{id}/feedback(id=${incident.id})}" method="post">
+                        <label for="rating" class="form-label">Rate the support</label>
+                        <select id="rating" name="rating" class="form-select mb-2" required>
+                            <option value="5">5 - Excellent</option>
+                            <option value="4">4 - Good</option>
+                            <option value="3">3 - Okay</option>
+                            <option value="2">2 - Poor</option>
+                            <option value="1">1 - Very poor</option>
+                        </select>
+                        <textarea name="comment" rows="2" class="form-control mb-2" placeholder="Comment (optional)"></textarea>
+                        <button type="submit" class="btn btn-outline-primary w-100">Send feedback</button>
+                    </form>
+
+                    <p class="text-muted small mb-0"
+                       th:if="${!canAssign and !canAcknowledge and !canStart and !canResolve and !canRequestInfo
+                                and !canProvideInfo and !canConfirm and !canClose and !canFeedback}">
+                        No actions available for you at this stage.
+                    </p>
+                </div>
+            </div>
+
+            <!-- ----- details ----- -->
+            <div class="card mb-4">
+                <div class="card-header fw-semibold">Details</div>
+                <ul class="list-group list-group-flush small">
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span class="text-muted">Reporter</span>
+                        <span th:text="${incident.reporter.fullName}">Reporter</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span class="text-muted">Service</span>
+                        <span th:text="${incident.service != null ? incident.service.name : '-'}">Service</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span class="text-muted">Category</span>
+                        <span th:text="${incident.category != null ? incident.category.name : 'Not classified'}">Category</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span class="text-muted">Impact / Urgency</span>
+                        <span th:text="${incident.impact.name() + ' / ' + incident.urgency.name()}">HIGH / HIGH</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span class="text-muted">People affected</span>
+                        <span th:text="${incident.affectedUsers}">1</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span class="text-muted">Technician</span>
+                        <span th:text="${incident.assignedTechnician != null ? incident.assignedTechnician.fullName : 'Unassigned'}">Technician</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span class="text-muted">Reported</span>
+                        <span th:text="${#temporals.format(incident.createdAt, 'dd MMM yyyy, HH:mm')}">date</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between" th:if="${incident.responseDeadline != null}">
+                        <span class="text-muted">Respond by</span>
+                        <span th:text="${#temporals.format(incident.responseDeadline, 'dd MMM, HH:mm')}">date</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between" th:if="${incident.resolutionDeadline != null}">
+                        <span class="text-muted">Resolve by</span>
+                        <span th:text="${#temporals.format(incident.resolutionDeadline, 'dd MMM, HH:mm')}">date</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between" th:if="${incident.resolvedAt != null}">
+                        <span class="text-muted">Resolved</span>
+                        <span th:text="${#temporals.format(incident.resolvedAt, 'dd MMM yyyy, HH:mm')}">date</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between" th:if="${incident.closedAt != null}">
+                        <span class="text-muted">Closed</span>
+                        <span th:text="${#temporals.format(incident.closedAt, 'dd MMM yyyy, HH:mm')}">date</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>
