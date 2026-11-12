@@ -10,8 +10,7 @@
             <h1 class="h3 mb-0">My incidents</h1>
             <p class="text-muted mb-0">Report problems and track their progress.</p>
         </div>
-        <!-- TODO (incident feature): point this to the report form, e.g. /employee/incidents/new -->
-        <a href="#" class="btn btn-primary disabled" aria-disabled="true">Report an incident</a>
+        <a th:href="@{/employee/incidents/new}" class="btn btn-primary">Report an incident</a>
     </div>
 
     <div class="row g-3 mb-4">
@@ -47,7 +46,7 @@
                         <td colspan="6" class="text-center text-muted py-4">You have not reported any incidents yet.</td>
                     </tr>
                     <tr th:each="i : ${incidents}">
-                        <td class="fw-semibold" th:text="${i.reference}">INC0001</td>
+                        <td class="fw-semibold"><a th:href="@{/incidents/{id}(id=${i.id})}" th:text="${i.reference}">INC0001</a></td>
                         <td th:text="${i.title}">Title</td>
                         <td th:text="${i.service != null ? i.service.name : '-'}">Service</td>
                         <td>
