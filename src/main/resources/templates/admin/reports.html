@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Reports')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+<div class="container">
+
+    <h2 class="my-3">Reports</h2>
+
+<div class="row mb-4">
+    <div class="col-md-3"><div class="card p-3"><div class="text-muted small">SLA violations</div>
+        <div class="fs-3" th:text="${slaViolations}">0</div></div></div>
+    <div class="col-md-3"><div class="card p-3"><div class="text-muted small">Avg resolution (minutes)</div>
+        <div class="fs-3" th:text="${avgResolution}">0</div></div></div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <h5>Incident overview (by status)</h5>
+        <table class="table table-sm">
+            <tr th:each="e : ${byStatus}"><td th:text="${e.key}"></td><td th:text="${e.value}"></td></tr>
+        </table>
+        <canvas id="byStatus"></canvas>
+    </div>
+    <div class="col-md-6">
+        <h5>By priority</h5>
+        <table class="table table-sm">
+            <tr th:each="e : ${byPriority}"><td th:text="${e.key}"></td><td th:text="${e.value}"></td></tr>
+        </table>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-6">
+        <h5>Service analysis</h5>
+        <table class="table table-sm">
+            <tr th:each="e : ${byService}"><td th:text="${e.key}"></td><td th:text="${e.value}"></td></tr>
+        </table>
+        <canvas id="byService"></canvas>
+    </div>
+    <div class="col-md-6">
+        <h5>Technician workload (open incidents)</h5>
+        <table class="table table-sm">
+            <tr th:each="e : ${workload}"><td th:text="${e.key}"></td><td th:text="${e.value}"></td></tr>
+        </table>
+        <canvas id="byTechnician"></canvas>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-6">
+        <h5>By category</h5>
+        <table class="table table-sm">
+            <tr th:each="e : ${byCategory}"><td th:text="${e.key}"></td><td th:text="${e.value}"></td></tr>
+        </table>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script th:inline="javascript">
+    function bar(id, labels, values, title) {
+        new Chart(document.getElementById(id), {
+            type: 'bar',
+            data: { labels: labels, datasets: [{ label: title, data: values }] },
+            options: { scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } }
+        });
+    }
+    bar('byStatus',     /*[[${statusLabels}]]*/ [],   /*[[${statusCounts}]]*/ [],   'Incidents');
+    bar('byService',    /*[[${serviceLabels}]]*/ [],  /*[[${serviceCounts}]]*/ [],  'Incidents');
+    bar('byTechnician', /*[[${workloadLabels}]]*/ [], /*[[${workloadCounts}]]*/ [], 'Open incidents');
+</script>
+</div>
+<div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>
