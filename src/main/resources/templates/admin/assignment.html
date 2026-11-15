@@ -30,7 +30,7 @@
             <tr th:each="technician : ${technicians}">
                 <td th:text="${technician.fullName}"></td>
                 <td th:text="${#strings.listJoin(technician.skills, ', ')}"></td>
-                <td th:text="${technician.available} ? 'Yes' : 'No'"></td>
+                <td th:text="${technician.isAvailable()} ? 'Yes' : 'No'"></td>
                 <td th:text="${activeCounts[technician.id]}"></td>
                 <td th:text="${technician.maxActiveIncidents}"></td>
             </tr>
