@@ -19,6 +19,7 @@ import com.itsm.state.IncidentLifecycle;
 import com.itsm.assignment.AssignmentService;
 import com.itsm.exception.TechnicianUnavailableException;
 import com.itsm.exception.WorkloadExceededException;
+import com.itsm.priority.PriorityCalculator;
 import com.itsm.domain.user.Technician;
 import com.itsm.domain.user.User;
 import org.springframework.stereotype.Service;
@@ -34,8 +35,9 @@ import org.springframework.transaction.annotation.Transactional;
         private final IncidentLifecycle lifecycle;
         private final AssignmentService assignmentService;
         private final CategoryRepository categoryRepository;
+        private final PriorityCalculator priorityCalculator;
 
-        public IncidentService(IncidentRepository incidentRepository, ItServiceRepository serviceRepository, AuditLogRepository auditLogRepository, TechnicianRepository technicianRepository, IncidentLifecycle lifecycle, AssignmentService assignmentService, CategoryRepository categoryRepository) {
+        public IncidentService(IncidentRepository incidentRepository, ItServiceRepository serviceRepository, AuditLogRepository auditLogRepository, TechnicianRepository technicianRepository, IncidentLifecycle lifecycle, AssignmentService assignmentService, CategoryRepository categoryRepository, PriorityCalculator priorityCalculator) {
             this.incidentRepository = incidentRepository;
             this.serviceRepository = serviceRepository;
             this.auditLogRepository = auditLogRepository;
@@ -43,6 +45,7 @@ import org.springframework.transaction.annotation.Transactional;
             this.lifecycle = lifecycle;
             this.assignmentService = assignmentService;
             this.categoryRepository = categoryRepository;
+            this.priorityCalculator = priorityCalculator;
         }
 
         public Incident findById(Long id) {
@@ -60,7 +63,12 @@ import org.springframework.transaction.annotation.Transactional;
             }
 
 
+            incident.applyPriority(priorityCalculator.calculate(incident));
             Incident savedIncident = incidentRepository.save(incident);
+
+                auditLogRepository.save(new AuditLog(reporter.getUsername(), "INCIDENT_CREATED",
+                savedIncident.getId(), null, savedIncident.getStatus().name(),
+                savedIncident.getReference() + " created: " + savedIncident.getTitle()));
 
                 try {
                     assignmentService.assignCandidate(savedIncident).ifPresent(technician -> {
@@ -76,10 +84,6 @@ import org.springframework.transaction.annotation.Transactional;
                 } catch (TechnicianUnavailableException | WorkloadExceededException ignored) {
                     // Keep the newly created incident in NEW when no technician can take it.
                 }
-
-                auditLogRepository.save(new AuditLog(reporter.getUsername(), "INCIDENT_CREATED",
-                savedIncident.getId(), null, savedIncident.getStatus().name(),
-                savedIncident.getReference() + " created: " + savedIncident.getTitle()));
 
                 return savedIncident;
         }
