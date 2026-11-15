@@ -1,6 +1,5 @@
 package com.itsm.service;
 
-import com.itsm.domain.audit.AuditLog;
 import com.itsm.domain.catalog.ItService;
 import com.itsm.domain.catalog.Category;
 import com.itsm.domain.incident.Incident;
@@ -10,7 +9,6 @@ import com.itsm.dto.IncidentForm;
 import com.itsm.exception.IncidentNotFoundException;
 import com.itsm.exception.ItsmException;
 import com.itsm.exception.ServiceNotFoundException;
-import com.itsm.repository.AuditLogRepository;
 import com.itsm.repository.IncidentRepository;
 import com.itsm.repository.ItServiceRepository;
 import com.itsm.repository.CategoryRepository;
@@ -20,8 +18,11 @@ import com.itsm.assignment.AssignmentService;
 import com.itsm.exception.TechnicianUnavailableException;
 import com.itsm.exception.WorkloadExceededException;
 import com.itsm.priority.PriorityCalculator;
+import com.itsm.sla.SlaService;
+import com.itsm.event.IncidentEvent;
 import com.itsm.domain.user.Technician;
 import com.itsm.domain.user.User;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,22 +31,24 @@ import org.springframework.transaction.annotation.Transactional;
     public class IncidentService {
         private final IncidentRepository incidentRepository;
         private final ItServiceRepository serviceRepository;
-        private final AuditLogRepository auditLogRepository;
+        private final ApplicationEventPublisher eventPublisher;
         private final TechnicianRepository technicianRepository;
         private final IncidentLifecycle lifecycle;
         private final AssignmentService assignmentService;
         private final CategoryRepository categoryRepository;
         private final PriorityCalculator priorityCalculator;
+        private final SlaService slaService;
 
-        public IncidentService(IncidentRepository incidentRepository, ItServiceRepository serviceRepository, AuditLogRepository auditLogRepository, TechnicianRepository technicianRepository, IncidentLifecycle lifecycle, AssignmentService assignmentService, CategoryRepository categoryRepository, PriorityCalculator priorityCalculator) {
+        public IncidentService(IncidentRepository incidentRepository, ItServiceRepository serviceRepository, ApplicationEventPublisher eventPublisher, TechnicianRepository technicianRepository, IncidentLifecycle lifecycle, AssignmentService assignmentService, CategoryRepository categoryRepository, PriorityCalculator priorityCalculator, SlaService slaService) {
             this.incidentRepository = incidentRepository;
             this.serviceRepository = serviceRepository;
-            this.auditLogRepository = auditLogRepository;
+            this.eventPublisher = eventPublisher;
             this.technicianRepository = technicianRepository;
             this.lifecycle = lifecycle;
             this.assignmentService = assignmentService;
             this.categoryRepository = categoryRepository;
             this.priorityCalculator = priorityCalculator;
+            this.slaService = slaService;
         }
 
         public Incident findById(Long id) {
@@ -63,12 +66,15 @@ import org.springframework.transaction.annotation.Transactional;
             }
 
 
+            //F2: work out the priority, F4: set the SLA deadlines for that priority
             incident.applyPriority(priorityCalculator.calculate(incident));
+            slaService.applyDeadlines(incident);
             Incident savedIncident = incidentRepository.save(incident);
 
-                auditLogRepository.save(new AuditLog(reporter.getUsername(), "INCIDENT_CREATED",
-                savedIncident.getId(), null, savedIncident.getStatus().name(),
-                savedIncident.getReference() + " created: " + savedIncident.getTitle()));
+                //F5: announce it; the listeners write the audit trail and send notifications
+                eventPublisher.publishEvent(new IncidentEvent(savedIncident, "INCIDENT_CREATED",
+                        reporter.getUsername(), null, savedIncident.getStatus().name(),
+                        savedIncident.getReference() + " created: " + savedIncident.getTitle()));
 
                 try {
                     assignmentService.assignCandidate(savedIncident).ifPresent(technician -> {
@@ -76,13 +82,17 @@ import org.springframework.transaction.annotation.Transactional;
                         savedIncident.assignTo(technician);
                         lifecycle.moveTo(savedIncident, IncidentStatus.ASSIGNED);
                         incidentRepository.save(savedIncident);
-                        auditLogRepository.save(new AuditLog("SYSTEM", "AUTO_ASSIGNED",
-                                savedIncident.getId(), previous, IncidentStatus.ASSIGNED.name(),
+                        eventPublisher.publishEvent(new IncidentEvent(savedIncident, "AUTO_ASSIGNED",
+                                "SYSTEM", previous, IncidentStatus.ASSIGNED.name(),
                                 savedIncident.getReference() + " automatically assigned to "
                                         + technician.getFullName()));
                     });
-                } catch (TechnicianUnavailableException | WorkloadExceededException ignored) {
-                    // Keep the newly created incident in NEW when no technician can take it.
+                } catch (TechnicianUnavailableException | WorkloadExceededException e) {
+                    // Keep the newly created incident in NEW when no technician can take it,
+                    // and tell the admins so one of them can assign it manually.
+                    eventPublisher.publishEvent(new IncidentEvent(savedIncident, "ASSIGNMENT_FAILED",
+                            "SYSTEM", null, null,
+                            savedIncident.getReference() + " could not be assigned automatically: " + e.getMessage()));
                 }
 
                 return savedIncident;
@@ -92,8 +102,8 @@ import org.springframework.transaction.annotation.Transactional;
             //making the move to the next status
             lifecycle.moveTo(incident, next);
             Incident savedIncident = incidentRepository.save(incident);
-               auditLogRepository.save(new AuditLog(actor.getUsername(), action,
-                savedIncident.getId(), previous, next.name(), description));
+               eventPublisher.publishEvent(new IncidentEvent(savedIncident, action,
+                actor.getUsername(), previous, next.name(), description));
                 return savedIncident;
 
         }

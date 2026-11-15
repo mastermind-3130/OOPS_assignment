@@ -20,6 +20,11 @@
                 <span th:text="${currentUser.fullName}">Name</span>
                 <span class="badge text-bg-secondary ms-1" th:text="${currentUser.role}">ROLE</span>
             </span>
+            <a class="btn btn-outline-light btn-sm" th:href="@{/notifications}">
+                Notifications
+                <span class="badge text-bg-danger" th:if="${unreadCount != null and unreadCount > 0}"
+                      th:text="${unreadCount}">0</span>
+            </a>
             <form th:action="@{/logout}" method="post" class="m-0">
                 <button type="submit" class="btn btn-outline-light btn-sm">Log out</button>
             </form>

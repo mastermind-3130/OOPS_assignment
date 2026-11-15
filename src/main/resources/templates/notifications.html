@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Notifications')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<div class="container">
+    <h1 class="h3 mb-4">Notifications</h1>
+
+    <ul class="list-group">
+        <li class="list-group-item d-flex justify-content-between align-items-center"
+            th:each="n : ${notifications}">
+            <div>
+                <span class="badge me-2"
+                      th:classappend="${n.channel == 'EMAIL'} ? 'text-bg-secondary' : 'text-bg-primary'"
+                      th:text="${n.channel}">IN_APP</span>
+                <span th:text="${n.message}">message</span>
+                <a class="ms-2 small" th:if="${n.incidentId != null}"
+                   th:href="@{/incidents/{id}(id=${n.incidentId})}">View incident</a>
+            </div>
+            <small class="text-muted text-nowrap"
+                   th:text="${n.createdAt != null ? #temporals.format(n.createdAt, 'dd MMM yyyy, HH:mm') : ''}">time</small>
+        </li>
+        <li class="list-group-item text-muted text-center" th:if="${#lists.isEmpty(notifications)}">
+            No notifications yet.
+        </li>
+    </ul>
+</div>
+
+<div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>
