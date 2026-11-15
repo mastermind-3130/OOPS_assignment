@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('PAGE TITLE')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+<div class="container">
+    <h2 class="my-3">User management</h2>
+<div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+<div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+
+<table class="table table-striped align-middle">
+    <thead><tr><th>Name</th><th>Username</th><th>Email</th><th>Role</th><th>Active</th><th></th></tr></thead>
+    <tbody>
+    <tr th:each="u : ${users}">
+        <td th:text="${u.fullName}"></td>
+        <td th:text="${u.username}"></td>
+        <td th:text="${u.email}"></td>
+        <td th:text="${u.role.name()}"></td>
+        <td><span class="badge" th:classappend="${u.active} ? 'bg-success' : 'bg-secondary'"
+                  th:text="${u.active} ? 'Active' : 'Inactive'"></span></td>
+        <td>
+            <form th:if="${u.username != currentUser.username}"
+                  th:action="@{/admin/users/{id}/toggle(id=${u.id})}" method="post">
+                <input type="hidden" name="active" th:value="${!u.active}">
+                <button type="submit" class="btn btn-sm btn-outline-primary"
+                        th:text="${u.active} ? 'Deactivate' : 'Activate'"></button>
+            </form>
+        </td>
+    </tr>
+    </tbody>
+</table>
+
+<h4 class="mt-4">Create user</h4>
+<form th:action="@{/admin/users}" method="post" class="row g-2">
+    <div class="col-md-3"><input class="form-control" name="username" placeholder="Username" required></div>
+    <div class="col-md-3"><input class="form-control" type="password" name="password" placeholder="Password (min 8)" required></div>
+    <div class="col-md-3"><input class="form-control" name="fullName" placeholder="Full name" required></div>
+    <div class="col-md-3"><input class="form-control" type="email" name="email" placeholder="Email" required></div>
+    <div class="col-md-3">
+        <select class="form-select" name="role">
+            <option th:each="r : ${roles}" th:value="${r.name()}" th:text="${r.name()}"></option>
+        </select>
+    </div>
+    <div class="col-md-3"><input class="form-control" name="department" placeholder="Department (employee)"></div>
+    <div class="col-md-3"><input class="form-control" type="number" name="experienceYears" min="0" value="0" placeholder="Experience years (technician)"></div>
+    <div class="col-md-3"><input class="form-control" name="skills" placeholder="Skills e.g. NETWORK, CLOUD (technician)"></div>
+    <div class="col-12"><button type="submit" class="btn btn-primary">Create</button></div>
+</form>
+</div>
+<div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>
