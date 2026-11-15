@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('PAGE TITLE')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+<div class="container">
+    <h2 class="my-3">Technicians</h2>
+<div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+<div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+
+<table class="table align-middle">
+    <thead><tr><th>Name</th><th>Skills (comma-separated)</th><th>Max workload</th><th>Available</th><th></th></tr></thead>
+    <tbody>
+    <tr th:each="t : ${technicians}">
+        <form th:action="@{/admin/technicians/{id}(id=${t.id})}" method="post">
+            <td th:text="${t.fullName}"></td>
+            <td><input class="form-control" name="skills" th:value="${#strings.setJoin(t.skills, ', ')}"></td>
+            <td><input class="form-control" type="number" min="1" name="maxActiveIncidents" th:value="${t.maxActiveIncidents}"></td>
+            <td><input type="checkbox" name="available" value="true" th:checked="${t.available}"></td>
+            <td><button type="submit" class="btn btn-sm btn-primary">Save</button></td>
+        </form>
+    </tr>
+    </tbody>
+</table>
+</div>
+<div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>

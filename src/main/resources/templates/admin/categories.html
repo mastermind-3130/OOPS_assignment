@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('PAGE TITLE')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+<div class="container">
+    <h2 class="my-3">Categories</h2>
+<div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+<div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+
+<table class="table align-middle">
+    <thead><tr><th>Code</th><th>Name</th><th>Description</th><th>Active</th><th></th></tr></thead>
+    <tbody>
+    <tr th:each="c : ${categories}">
+        <form th:action="@{/admin/categories/{id}(id=${c.id})}" method="post">
+            <td><code th:text="${c.code}"></code></td>
+            <td><input class="form-control" name="name" th:value="${c.name}" required></td>
+            <td><input class="form-control" name="description" th:value="${c.description}"></td>
+            <td><input type="checkbox" name="active" value="true" th:checked="${c.active}"></td>
+            <td><button type="submit" class="btn btn-sm btn-primary">Save</button></td>
+        </form>
+    </tr>
+    </tbody>
+</table>
+
+<h4 class="mt-4">Add category</h4>
+<form th:action="@{/admin/categories}" method="post" class="row g-2">
+    <div class="col-md-2"><input class="form-control" name="code" placeholder="CODE" required></div>
+    <div class="col-md-3"><input class="form-control" name="name" placeholder="Name" required></div>
+    <div class="col-md-5"><input class="form-control" name="description" placeholder="Description"></div>
+    <div class="col-md-2"><button type="submit" class="btn btn-primary">Add</button></div>
+</form>
+</div>
+<div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>

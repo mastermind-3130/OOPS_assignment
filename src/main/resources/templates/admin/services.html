@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('PAGE TITLE')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+<div class="container">
+    <h2 class="my-3">IT services</h2>
+<div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+<div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+
+<table class="table align-middle">
+    <thead><tr><th>Name</th><th>Description</th><th>Criticality</th><th>Active</th><th></th></tr></thead>
+    <tbody>
+    <tr th:each="s : ${services}">
+        <form th:action="@{/admin/services/{id}(id=${s.id})}" method="post">
+            <td><input class="form-control" name="name" th:value="${s.name}" required></td>
+            <td><input class="form-control" name="description" th:value="${s.description}"></td>
+            <td>
+                <select class="form-select" name="criticality">
+                    <option th:each="c : ${criticalities}" th:value="${c.name()}" th:text="${c.name()}"
+                            th:selected="${c == s.criticality}"></option>
+                </select>
+            </td>
+            <td><input type="checkbox" name="active" value="true" th:checked="${s.active}"></td>
+            <td><button type="submit" class="btn btn-sm btn-primary">Save</button></td>
+        </form>
+    </tr>
+    </tbody>
+</table>
+
+<h4 class="mt-4">Add service</h4>
+<form th:action="@{/admin/services}" method="post" class="row g-2">
+    <div class="col-md-3"><input class="form-control" name="name" placeholder="Name" required></div>
+    <div class="col-md-4"><input class="form-control" name="description" placeholder="Description"></div>
+    <div class="col-md-3">
+        <select class="form-select" name="criticality">
+            <option th:each="c : ${criticalities}" th:value="${c.name()}" th:text="${c.name()}"></option>
+        </select>
+    </div>
+    <div class="col-md-2"><button type="submit" class="btn btn-primary">Add</button></div>
+</form>
+</div>
+<div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>
