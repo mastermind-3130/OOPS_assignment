@@ -20,6 +20,7 @@ public class IncidentForm {
     @NotNull(message="Please select number of affected users")
     @Min(value=1,message="Atleast 1 uesr must be affected")
     private Integer affectedUsers=1 ;
+    private Long categoryId;
         public String getTitle() {
         return title;
     }
@@ -61,9 +62,13 @@ public class IncidentForm {
         this.urgency = urgency;
     }
 
+    public Long getCategoryId() { return categoryId; }       
+    
     public Integer getAffectedUsers() {
         return affectedUsers;
     }
+
+    public void setCategoryId(Long categoryId) { this.categoryId = categoryId; }
 
     public void setAffectedUsers(Integer affectedUsers) {
         this.affectedUsers = affectedUsers;

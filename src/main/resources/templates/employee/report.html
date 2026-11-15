@@ -40,6 +40,20 @@
                     <div class="invalid-feedback" th:errors="*{serviceId}">Service error</div>
                 </div>
 
+                
+                <div class="mb-3">
+                    <label for="categoryId" class="form-label">Incident category</label>
+                    <select id="categoryId" th:field="*{categoryId}" class="form-select">
+                            <option value="">Choose a category</option>
+                            <option th:each="c : ${categories}"
+                                th:value="${c.id}"
+                                th:text="${c.name}">
+                            Category
+                            </option>
+                    </select>
+                </div>
+
+
                 <div class="row">
                     <div class="col-md-4 mb-3">
                         <label for="impact" class="form-label">Impact</label>

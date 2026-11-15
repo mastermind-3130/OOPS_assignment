@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Assignment Strategy')}"></head>
+<body>
+<div th:replace="~{fragments/layout :: navbar}"></div>
+<main class="container">
+    <h1>Technician Assignment</h1>
+
+    <p th:if="${success}" th:text="${success}" class="alert alert-success"></p>
+    <p th:if="${error}" th:text="${error}" class="alert alert-danger"></p>
+
+    <section>
+        <h2>Active strategy</h2>
+        <form method="post" th:action="@{/admin/assignment}">
+            <select name="strategy">
+                <option th:each="strategy : ${strategies}"
+                        th:value="${strategy.name}"
+                        th:text="${strategy.label}"
+                        th:selected="${strategy.name == activeStrategy}"></option>
+            </select>
+            <button type="submit">Save strategy</button>
+        </form>
+    </section>
+
+    <section>
+        <h2>Technician workload</h2>
+        <table>
+            <thead><tr><th>Technician</th><th>Skills</th><th>Available</th><th>Active incidents</th><th>Maximum</th></tr></thead>
+            <tbody>
+            <tr th:each="technician : ${technicians}">
+                <td th:text="${technician.fullName}"></td>
+                <td th:text="${#strings.listJoin(technician.skills, ', ')}"></td>
+                <td th:text="${technician.isAvailable()} ? 'Yes' : 'No'"></td>
+                <td th:text="${activeCounts[technician.id]}"></td>
+                <td th:text="${technician.maxActiveIncidents}"></td>
+            </tr>
+            </tbody>
+        </table>
+    </section>
+</main>
+</body>
+</html>
