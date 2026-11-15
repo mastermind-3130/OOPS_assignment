@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('PAGE TITLE')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+<div class="container">
+    <h2 class="my-3">SLA policies</h2>
+<div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+<div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+
+<table class="table align-middle">
+    <thead><tr><th>Priority</th><th>Service</th><th>Response (min)</th><th>Resolution (min)</th><th></th></tr></thead>
+    <tbody>
+    <tr th:each="p : ${policies}">
+        <form th:action="@{/admin/sla-policies/{id}(id=${p.id})}" method="post">
+            <td><span class="badge" th:classappend="'priority-' + ${p.priority.name()}"
+                      th:text="${p.priority.name() + ' ' + p.priority.label}"></span></td>
+            <td th:text="${p.service != null ? p.service.name : 'All services (default)'}"></td>
+            <td><input class="form-control" type="number" min="1" name="responseMinutes" th:value="${p.responseMinutes}"></td>
+            <td><input class="form-control" type="number" min="1" name="resolutionMinutes" th:value="${p.resolutionMinutes}"></td>
+            <td><button type="submit" class="btn btn-sm btn-primary">Save</button></td>
+        </form>
+    </tr>
+    </tbody>
+</table>
+</div>
+<div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>
