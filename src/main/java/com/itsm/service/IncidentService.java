@@ -1,5 +1,8 @@
 package com.itsm.service;
 
+import com.itsm.intelligence.CategorySuggester; //added by me lmfao
+import com.itsm.intelligence.DuplicateDetector;
+import java.util.List;
 import com.itsm.domain.catalog.ItService;
 import com.itsm.domain.catalog.Category;
 import com.itsm.domain.incident.Incident;
@@ -39,7 +42,10 @@ import org.springframework.transaction.annotation.Transactional;
         private final PriorityCalculator priorityCalculator;
         private final SlaService slaService;
 
-        public IncidentService(IncidentRepository incidentRepository, ItServiceRepository serviceRepository, ApplicationEventPublisher eventPublisher, TechnicianRepository technicianRepository, IncidentLifecycle lifecycle, AssignmentService assignmentService, CategoryRepository categoryRepository, PriorityCalculator priorityCalculator, SlaService slaService) {
+        private final CategorySuggester categorySuggester; //me again lol
+        private final DuplicateDetector duplicateDetector;
+
+        public IncidentService(IncidentRepository incidentRepository, ItServiceRepository serviceRepository, ApplicationEventPublisher eventPublisher, TechnicianRepository technicianRepository, IncidentLifecycle lifecycle, AssignmentService assignmentService, CategoryRepository categoryRepository, PriorityCalculator priorityCalculator,SlaService slaService,CategorySuggester categorySuggester,DuplicateDetector duplicateDetector) {
             this.incidentRepository = incidentRepository;
             this.serviceRepository = serviceRepository;
             this.eventPublisher = eventPublisher;
@@ -49,6 +55,8 @@ import org.springframework.transaction.annotation.Transactional;
             this.categoryRepository = categoryRepository;
             this.priorityCalculator = priorityCalculator;
             this.slaService = slaService;
+            this.categorySuggester = categorySuggester;
+            this.duplicateDetector = duplicateDetector;
         }
 
         public Incident findById(Long id) {
@@ -175,5 +183,28 @@ import org.springframework.transaction.annotation.Transactional;
             incident.addNote(author, content);
             return incidentRepository.save(incident);
         }
+
+
+    // ---------- Feature 8: Intelligent Features ----------
+
+    public List<Incident> findSimilarIncidents(Long incidentId) {
+        Incident incident = findById(incidentId);
+        return duplicateDetector.findSimilarOpen(incident);
+    }
+
+    public List<Incident> suggestHistoricalResolutions(Long incidentId) {
+        Incident incident = findById(incidentId);
+        return duplicateDetector.findSimilarResolved(incident);
+    }
+
+    public String suggestCategory(String title, String description) {
+        String text = (title == null ? "" : title)
+                + " "
+                + (description == null ? "" : description);
+
+        return categorySuggester.suggestCode(text).orElse(null);
+    }
+
+
 
     }
