@@ -67,6 +67,27 @@ public class IncidentController {
         model.addAttribute("backUrl", user.getRole().getDashboardPath());
         model.addAttribute("slaStatus", slaService.statusOf(incident));
 
+        
+        // Feature 8: Intelligent incident suggestions YOOOOOOOO AHAHHAA EASTER EGG
+        var similarIncidents = incidentService.findSimilarIncidents(id);
+        var suggestedResolutions = incidentService.suggestHistoricalResolutions(id);
+
+        // Employees must not see incidents belonging to other employees.
+        // Technicians and administrators retain their existing viewing rights.
+        if (user instanceof Employee) {
+            similarIncidents = similarIncidents.stream()
+                    .filter(other -> sameUser(other.getReporter(), user))
+                    .toList();
+
+            suggestedResolutions = suggestedResolutions.stream()
+                    .filter(other -> sameUser(other.getReporter(), user))
+                    .toList();
+        }
+
+        model.addAttribute("similarIncidents", similarIncidents);
+        model.addAttribute("suggestedResolutions", suggestedResolutions);
+
+
         // Which buttons to show. The page only shows an action if it makes sense
         // for this user and this status.
         model.addAttribute("canAssign", isAdmin

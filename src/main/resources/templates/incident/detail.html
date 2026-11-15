@@ -58,6 +58,35 @@
                 </div>
             </div>
 
+            <!-- ===== Feature 8: possible duplicate incidents ===== -->
+            <div class="card mb-4" th:if="${similarIncidents != null and !#lists.isEmpty(similarIncidents)}">
+                <div class="card-header fw-semibold">Possible Duplicate Incidents</div>
+                <div class="card-body">
+                    <p class="small text-muted">These incidents have similar descriptions. Review before reporting or investigating the same problem twice.</p>
+                    <div class="list-group list-group-flush">
+                        <div class="list-group-item px-0" th:each="match : ${similarIncidents}">
+                            <a th:href="@{/incidents/{id}(id=${match.id})}"
+                               th:text="${match.reference + ' — ' + match.title}">INC0002 — Similar incident</a>
+                            <div class="small text-muted" th:text="${match.status.label}">Open</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===== Feature 8: historical resolution suggestions ===== -->
+            <div class="card mb-4" th:if="${suggestedResolutions != null and !#lists.isEmpty(suggestedResolutions)}">
+                <div class="card-header fw-semibold">Suggested Past Resolutions</div>
+                <div class="card-body">
+                    <p class="small text-muted">Suggestions from similar incidents that were resolved previously; verify before applying.</p>
+                    <div class="border-bottom pb-3 mb-3" th:each="match : ${suggestedResolutions}">
+                        <a th:href="@{/incidents/{id}(id=${match.id})}"
+                           th:text="${match.reference + ' — ' + match.title}">INC0003 — Similar resolved incident</a>
+                        <p class="mb-0 mt-2" style="white-space: pre-line;"
+                           th:text="${match.resolutionSummary}">Previously used fix</p>
+                    </div>
+                </div>
+            </div>
+
             <!-- ----- notes ----- -->
             <div class="card mb-4">
                 <div class="card-header fw-semibold">Notes</div>

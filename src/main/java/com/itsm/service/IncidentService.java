@@ -1,5 +1,9 @@
 package com.itsm.service;
 
+import com.itsm.intelligence.CategorySuggester; //added by me lmfao
+import com.itsm.intelligence.DuplicateDetector;
+import java.util.List;
+import java.util.Arrays;
 import com.itsm.domain.catalog.ItService;
 import com.itsm.domain.catalog.Category;
 import com.itsm.domain.incident.Incident;
@@ -39,7 +43,10 @@ import org.springframework.transaction.annotation.Transactional;
         private final PriorityCalculator priorityCalculator;
         private final SlaService slaService;
 
-        public IncidentService(IncidentRepository incidentRepository, ItServiceRepository serviceRepository, ApplicationEventPublisher eventPublisher, TechnicianRepository technicianRepository, IncidentLifecycle lifecycle, AssignmentService assignmentService, CategoryRepository categoryRepository, PriorityCalculator priorityCalculator, SlaService slaService) {
+        private final CategorySuggester categorySuggester; //me again lol
+        private final DuplicateDetector duplicateDetector;
+
+        public IncidentService(IncidentRepository incidentRepository, ItServiceRepository serviceRepository, ApplicationEventPublisher eventPublisher, TechnicianRepository technicianRepository, IncidentLifecycle lifecycle, AssignmentService assignmentService, CategoryRepository categoryRepository, PriorityCalculator priorityCalculator,SlaService slaService,CategorySuggester categorySuggester,DuplicateDetector duplicateDetector) {
             this.incidentRepository = incidentRepository;
             this.serviceRepository = serviceRepository;
             this.eventPublisher = eventPublisher;
@@ -49,6 +56,8 @@ import org.springframework.transaction.annotation.Transactional;
             this.categoryRepository = categoryRepository;
             this.priorityCalculator = priorityCalculator;
             this.slaService = slaService;
+            this.categorySuggester = categorySuggester;
+            this.duplicateDetector = duplicateDetector;
         }
 
         public Incident findById(Long id) {
@@ -59,10 +68,24 @@ import org.springframework.transaction.annotation.Transactional;
             ItService service = serviceRepository.findById(form.getServiceId()).orElseThrow(() -> new ServiceNotFoundException("Service "+form.getServiceId()+" not found"));
             //build the incident object
             Incident incident = new Incident(form.getTitle(), form.getDescription(), reporter, service, form.getImpact(), form.getUrgency(), form.getAffectedUsers());
+            
+                        
             if (form.getCategoryId() != null) {
+                // Respect the category explicitly selected by the employee.
                 Category category = categoryRepository.findById(form.getCategoryId())
                         .orElseThrow(() -> new ItsmException("Category not found"));
                 incident.classify(category);
+            } else {
+                // Feature 8: Automatically suggest a category from incident text.
+                String suggestedCode = suggestCategory(
+                        form.getTitle(), form.getDescription()
+                );
+
+                if (suggestedCode != null) {
+                    categoryRepository.findByCode(suggestedCode)
+                            .filter(Category::isActive)
+                            .ifPresent(incident::classify);
+                }
             }
 
 
@@ -111,14 +134,30 @@ import org.springframework.transaction.annotation.Transactional;
         // ---------- admin ----------
 
         //set the technician, then move to ASSIGNED
+       
+                   //set the technician, then move to ASSIGNED
         public Incident assign(Long id, Long technicianId, User assignedBy){
             Incident incident = findById(id);
             Technician technician = technicianRepository.findById(technicianId)
                     .orElseThrow(() -> new ItsmException("Technician " + technicianId + " not found"));
+
+            //business rules: the technician must be available and under their workload limit
+            if (!technician.isAvailable()) {
+                throw new TechnicianUnavailableException(technician.getFullName() + " is currently unavailable.");
+            }
+            List<IncidentStatus> openStatuses = Arrays.stream(IncidentStatus.values())
+                    .filter(IncidentStatus::isOpen).toList();
+            long active = incidentRepository.countByAssignedTechnicianAndStatusIn(technician, openStatuses);
+            if (!technician.canTakeMore((int) active)) {
+                throw new WorkloadExceededException(technician.getFullName() + " already has " + active
+                        + " open incidents (limit " + technician.getMaxActiveIncidents() + ").");
+            }
+
             incident.assignTo(technician);
             return changeStatus(incident, IncidentStatus.ASSIGNED, assignedBy,
                     "ASSIGNED", incident.getReference() + " assigned to " + technician.getFullName());
         }
+        
 
         // ---------- technician ----------
 
@@ -175,5 +214,28 @@ import org.springframework.transaction.annotation.Transactional;
             incident.addNote(author, content);
             return incidentRepository.save(incident);
         }
+
+
+    // ---------- Feature 8: Intelligent Features ----------
+
+    public List<Incident> findSimilarIncidents(Long incidentId) {
+        Incident incident = findById(incidentId);
+        return duplicateDetector.findSimilarOpen(incident);
+    }
+
+    public List<Incident> suggestHistoricalResolutions(Long incidentId) {
+        Incident incident = findById(incidentId);
+        return duplicateDetector.findSimilarResolved(incident);
+    }
+
+    public String suggestCategory(String title, String description) {
+        String text = (title == null ? "" : title)
+                + " "
+                + (description == null ? "" : description);
+
+        return categorySuggester.suggestCode(text).orElse(null);
+    }
+
+
 
     }
