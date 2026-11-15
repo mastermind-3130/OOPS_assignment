@@ -3,6 +3,7 @@ package com.itsm.service;
 import com.itsm.intelligence.CategorySuggester; //added by me lmfao
 import com.itsm.intelligence.DuplicateDetector;
 import java.util.List;
+import java.util.Arrays;
 import com.itsm.domain.catalog.ItService;
 import com.itsm.domain.catalog.Category;
 import com.itsm.domain.incident.Incident;
@@ -133,14 +134,30 @@ import org.springframework.transaction.annotation.Transactional;
         // ---------- admin ----------
 
         //set the technician, then move to ASSIGNED
+       
+                   //set the technician, then move to ASSIGNED
         public Incident assign(Long id, Long technicianId, User assignedBy){
             Incident incident = findById(id);
             Technician technician = technicianRepository.findById(technicianId)
                     .orElseThrow(() -> new ItsmException("Technician " + technicianId + " not found"));
+
+            //business rules: the technician must be available and under their workload limit
+            if (!technician.isAvailable()) {
+                throw new TechnicianUnavailableException(technician.getFullName() + " is currently unavailable.");
+            }
+            List<IncidentStatus> openStatuses = Arrays.stream(IncidentStatus.values())
+                    .filter(IncidentStatus::isOpen).toList();
+            long active = incidentRepository.countByAssignedTechnicianAndStatusIn(technician, openStatuses);
+            if (!technician.canTakeMore((int) active)) {
+                throw new WorkloadExceededException(technician.getFullName() + " already has " + active
+                        + " open incidents (limit " + technician.getMaxActiveIncidents() + ").");
+            }
+
             incident.assignTo(technician);
             return changeStatus(incident, IncidentStatus.ASSIGNED, assignedBy,
                     "ASSIGNED", incident.getReference() + " assigned to " + technician.getFullName());
         }
+        
 
         // ---------- technician ----------
 
