@@ -67,10 +67,24 @@ import org.springframework.transaction.annotation.Transactional;
             ItService service = serviceRepository.findById(form.getServiceId()).orElseThrow(() -> new ServiceNotFoundException("Service "+form.getServiceId()+" not found"));
             //build the incident object
             Incident incident = new Incident(form.getTitle(), form.getDescription(), reporter, service, form.getImpact(), form.getUrgency(), form.getAffectedUsers());
+            
+                        
             if (form.getCategoryId() != null) {
+                // Respect the category explicitly selected by the employee.
                 Category category = categoryRepository.findById(form.getCategoryId())
                         .orElseThrow(() -> new ItsmException("Category not found"));
                 incident.classify(category);
+            } else {
+                // Feature 8: Automatically suggest a category from incident text.
+                String suggestedCode = suggestCategory(
+                        form.getTitle(), form.getDescription()
+                );
+
+                if (suggestedCode != null) {
+                    categoryRepository.findByCode(suggestedCode)
+                            .filter(Category::isActive)
+                            .ifPresent(incident::classify);
+                }
             }
 
 
