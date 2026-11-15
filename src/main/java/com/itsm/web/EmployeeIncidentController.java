@@ -7,6 +7,7 @@ import com.itsm.domain.user.Employee;
 import com.itsm.dto.IncidentForm;
 import com.itsm.exception.ItsmException;
 import com.itsm.repository.ItServiceRepository;
+import com.itsm.repository.CategoryRepository;
 import com.itsm.security.CurrentUserService;
 import com.itsm.service.IncidentService;
 import jakarta.validation.Valid;
@@ -29,13 +30,15 @@ public class EmployeeIncidentController {
     private final IncidentService incidentService;
     private final CurrentUserService currentUserService;
     private final ItServiceRepository serviceRepository;
+    private final CategoryRepository categoryRepository;
 
     public EmployeeIncidentController(IncidentService incidentService,
                                       CurrentUserService currentUserService,
-                                      ItServiceRepository serviceRepository) {
+                                      ItServiceRepository serviceRepository, CategoryRepository categoryRepository) {
         this.incidentService = incidentService;
         this.currentUserService = currentUserService;
         this.serviceRepository = serviceRepository;
+        this.categoryRepository = categoryRepository;
     }
 
     /** Shows the empty form. */
@@ -73,6 +76,7 @@ public class EmployeeIncidentController {
 
     private void addDropdownData(Model model) {
         model.addAttribute("services", serviceRepository.findByActiveTrueOrderByNameAsc());
+        model.addAttribute("categories", categoryRepository.findByActiveTrueOrderByNameAsc());
         model.addAttribute("impacts", Impact.values());
         model.addAttribute("urgencies", Urgency.values());
     }
