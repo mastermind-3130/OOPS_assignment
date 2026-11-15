@@ -6,9 +6,63 @@
 
 <div class="container">
     <a th:href="@{/admin/dashboard}" class="small text-decoration-none">&larr; Back to dashboard</a>
-    <h1 class="h3 mt-2 mb-4">All incidents</h1>
+    <h1 class="h3 mt-2 mb-4">All incidents &amp; search</h1>
 
-    <!-- The search feature can add its filter form here. -->
+    <!-- Search filters -->
+    <form th:action="@{/admin/incidents}" th:object="${criteria}" method="get" class="row g-2 mb-4">
+        <div class="col-md-3">
+            <input class="form-control" th:field="*{reference}" placeholder="Reference e.g. INC0003">
+        </div>
+        <div class="col-md-3">
+            <select class="form-select" th:field="*{status}">
+                <option value="">Any status</option>
+                <option th:each="s : ${statuses}" th:value="${s.name()}" th:text="${s.label}"></option>
+            </select>
+        </div>
+        <div class="col-md-3">
+            <select class="form-select" th:field="*{priority}">
+                <option value="">Any priority</option>
+                <option th:each="p : ${priorities}" th:value="${p.name()}" th:text="${p.name() + ' ' + p.label}"></option>
+            </select>
+        </div>
+        <div class="col-md-3">
+            <select class="form-select" th:field="*{categoryId}">
+                <option value="">Any category</option>
+                <option th:each="c : ${categories}" th:value="${c.id}" th:text="${c.name}"></option>
+            </select>
+        </div>
+        <div class="col-md-3">
+            <select class="form-select" th:field="*{serviceId}">
+                <option value="">Any service</option>
+                <option th:each="s : ${services}" th:value="${s.id}" th:text="${s.name}"></option>
+            </select>
+        </div>
+        <div class="col-md-3">
+            <select class="form-select" th:field="*{technicianId}">
+                <option value="">Any technician</option>
+                <option th:each="t : ${technicians}" th:value="${t.id}" th:text="${t.fullName}"></option>
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label class="form-label small mb-0">Reported from</label>
+            <input class="form-control" type="date" th:field="*{dateFrom}">
+        </div>
+        <div class="col-md-3">
+            <label class="form-label small mb-0">Reported to</label>
+            <input class="form-control" type="date" th:field="*{dateTo}">
+        </div>
+        <div class="col-md-3 d-flex align-items-center">
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="slaBreached" name="slaBreached" value="true"
+                       th:checked="${criteria.slaBreached == true}">
+                <label class="form-check-label" for="slaBreached">SLA breached</label>
+            </div>
+        </div>
+        <div class="col-md-9 d-flex align-items-center gap-2">
+            <button type="submit" class="btn btn-primary">Search</button>
+            <a th:href="@{/admin/incidents}" class="btn btn-outline-secondary">Clear</a>
+        </div>
+    </form>
 
     <div class="card">
         <div class="card-body p-0">
@@ -19,7 +73,7 @@
                     </thead>
                     <tbody>
                     <tr th:if="${#lists.isEmpty(incidents)}">
-                        <td colspan="8" class="text-center text-muted py-4">No incidents yet.</td>
+                        <td colspan="8" class="text-center text-muted py-4">No incidents found.</td>
                     </tr>
                     <tr th:each="i : ${incidents}">
                         <td class="fw-semibold"><a th:href="@{/incidents/{id}(id=${i.id})}" th:text="${i.reference}">INC0001</a></td>
