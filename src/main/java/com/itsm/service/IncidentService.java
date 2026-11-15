@@ -13,7 +13,8 @@ import com.itsm.repository.AuditLogRepository;
 import com.itsm.repository.IncidentRepository;
 import com.itsm.repository.ItServiceRepository;
 import com.itsm.repository.TechnicianRepository;
-import com.itsm.state.IncidentLifecycle;\nimport com.itsm.priority.PriorityCalculator;
+import com.itsm.state.IncidentLifecycle;
+import com.itsm.priority.PriorityCalculator;
 import com.itsm.domain.user.Technician;
 import com.itsm.domain.user.User;
 import org.springframework.stereotype.Service;
@@ -26,14 +27,16 @@ import org.springframework.transaction.annotation.Transactional;
         private final ItServiceRepository serviceRepository;
         private final AuditLogRepository auditLogRepository;
         private final TechnicianRepository technicianRepository;
-        private final IncidentLifecycle lifecycle;\n        private final PriorityCalculator priorityCalculator;
+        private final IncidentLifecycle lifecycle;
+        private final PriorityCalculator priorityCalculator;
 
         public IncidentService(IncidentRepository incidentRepository, ItServiceRepository serviceRepository, AuditLogRepository auditLogRepository, TechnicianRepository technicianRepository, IncidentLifecycle lifecycle, PriorityCalculator priorityCalculator) {
             this.incidentRepository = incidentRepository;
             this.serviceRepository = serviceRepository;
             this.auditLogRepository = auditLogRepository;
             this.technicianRepository = technicianRepository;
-            this.lifecycle = lifecycle;\n            this.priorityCalculator = priorityCalculator;
+            this.lifecycle = lifecycle;
+            this.priorityCalculator = priorityCalculator;
         }
 
         public Incident findById(Long id) {
@@ -45,7 +48,8 @@ import org.springframework.transaction.annotation.Transactional;
             //build the incident object
             Incident incident = new Incident(form.getTitle(), form.getDescription(), reporter, service, form.getImpact(), form.getUrgency(), form.getAffectedUsers());
 
-            incident.applyPriority(priorityCalculator.calculate(incident));\n\n            Incident savedIncident = incidentRepository.save(incident);
+            incident.applyPriority(priorityCalculator.calculate(incident));
+            Incident savedIncident = incidentRepository.save(incident);
                 auditLogRepository.save(new AuditLog(reporter.getUsername(), "INCIDENT_CREATED",
                 savedIncident.getId(), null, savedIncident.getStatus().name(),
                 savedIncident.getReference() + " created: " + savedIncident.getTitle()));
