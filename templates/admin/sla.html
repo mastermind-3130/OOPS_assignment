@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('SLA monitor')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+<div class="container">
+  <h3 class="mt-4">SLA violations</h3>
+  <table class="table table-sm">
+    <thead><tr><th>Incident</th><th>Type</th><th>Deadline</th><th>Detected at</th></tr></thead>
+    <tbody>
+      <tr th:each="v : ${violations}">
+        <td><a th:href="@{/incidents/{id}(id=${v.incident.id})}" th:text="${v.incident.reference}"></a></td>
+        <td th:text="${v.type.name()}"></td>
+        <td th:text="${#temporals.format(v.deadline, 'dd MMM yyyy, HH:mm')}"></td>
+        <td th:text="${#temporals.format(v.detectedAt, 'dd MMM yyyy, HH:mm')}"></td>
+      </tr>
+      <tr th:if="${#lists.isEmpty(violations)}"><td colspan="4" class="text-muted">None</td></tr>
+    </tbody>
+  </table>
+
+  <h3 class="mt-4">Open incidents at risk</h3>
+  <ul class="list-group">
+    <li class="list-group-item" th:each="i : ${atRisk}">
+      <a th:href="@{/incidents/{id}(id=${i.id})}" th:text="${i.reference + ' - ' + i.title}"></a>
+      <span class="text-muted" th:if="${i.resolutionDeadline != null}"
+            th:text="' (resolve by ' + ${#temporals.format(i.resolutionDeadline, 'dd MMM, HH:mm')} + ')'"></span>
+    </li>
+    <li class="list-group-item text-muted" th:if="${#lists.isEmpty(atRisk)}">None</li>
+  </ul>
+</div>
+<div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>
