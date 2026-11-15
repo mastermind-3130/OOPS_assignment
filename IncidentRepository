@@ -1,0 +1,1 @@
+List<Incident> findByStatusIn(Collection<IncidentStatus> statuses);
