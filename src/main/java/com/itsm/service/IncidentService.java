@@ -1,7 +1,8 @@
 package com.itsm.service;
 
 import com.itsm.domain.audit.AuditLog;
-import com.itsm.domain.catalog.ItService;\nimport com.itsm.domain.catalog.Category;
+import com.itsm.domain.catalog.ItService;
+import com.itsm.domain.catalog.Category;
 import com.itsm.domain.incident.Incident;
 import com.itsm.domain.user.Employee;
 import com.itsm.domain.enums.IncidentStatus;
@@ -11,9 +12,13 @@ import com.itsm.exception.ItsmException;
 import com.itsm.exception.ServiceNotFoundException;
 import com.itsm.repository.AuditLogRepository;
 import com.itsm.repository.IncidentRepository;
-import com.itsm.repository.ItServiceRepository;\nimport com.itsm.repository.CategoryRepository;
+import com.itsm.repository.ItServiceRepository;
+import com.itsm.repository.CategoryRepository;
 import com.itsm.repository.TechnicianRepository;
-import com.itsm.state.IncidentLifecycle;\nimport com.itsm.assignment.AssignmentService;\nimport com.itsm.exception.TechnicianUnavailableException;\nimport com.itsm.exception.WorkloadExceededException;
+import com.itsm.state.IncidentLifecycle;
+import com.itsm.assignment.AssignmentService;
+import com.itsm.exception.TechnicianUnavailableException;
+import com.itsm.exception.WorkloadExceededException;
 import com.itsm.domain.user.Technician;
 import com.itsm.domain.user.User;
 import org.springframework.stereotype.Service;
@@ -26,14 +31,18 @@ import org.springframework.transaction.annotation.Transactional;
         private final ItServiceRepository serviceRepository;
         private final AuditLogRepository auditLogRepository;
         private final TechnicianRepository technicianRepository;
-        private final IncidentLifecycle lifecycle;\n        private final AssignmentService assignmentService;\n        private final CategoryRepository categoryRepository;
+        private final IncidentLifecycle lifecycle;
+        private final AssignmentService assignmentService;
+        private final CategoryRepository categoryRepository;
 
         public IncidentService(IncidentRepository incidentRepository, ItServiceRepository serviceRepository, AuditLogRepository auditLogRepository, TechnicianRepository technicianRepository, IncidentLifecycle lifecycle, AssignmentService assignmentService, CategoryRepository categoryRepository) {
             this.incidentRepository = incidentRepository;
             this.serviceRepository = serviceRepository;
             this.auditLogRepository = auditLogRepository;
             this.technicianRepository = technicianRepository;
-            this.lifecycle = lifecycle;\n            this.assignmentService = assignmentService;\n            this.categoryRepository = categoryRepository;
+            this.lifecycle = lifecycle;
+            this.assignmentService = assignmentService;
+            this.categoryRepository = categoryRepository;
         }
 
         public Incident findById(Long id) {
