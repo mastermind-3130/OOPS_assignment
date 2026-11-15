@@ -26,4 +26,7 @@ public interface IncidentRepository extends JpaRepository<Incident, Long>, JpaSp
     long countByStatusIn(Collection<IncidentStatus> statuses);
 
     long countByPriorityAndStatusIn(Priority priority, Collection<IncidentStatus> statuses);
+
+    /** Used by the SLA monitor to load every open incident. */
+    List<Incident> findByStatusIn(Collection<IncidentStatus> statuses);
 }

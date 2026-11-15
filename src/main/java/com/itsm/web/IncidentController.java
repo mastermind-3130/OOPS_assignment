@@ -12,6 +12,7 @@ import com.itsm.repository.AuditLogRepository;
 import com.itsm.repository.TechnicianRepository;
 import com.itsm.security.CurrentUserService;
 import com.itsm.service.IncidentService;
+import com.itsm.sla.SlaService;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -34,15 +35,18 @@ public class IncidentController {
     private final CurrentUserService currentUserService;
     private final TechnicianRepository technicianRepository;
     private final AuditLogRepository auditLogRepository;
+    private final SlaService slaService;
 
     public IncidentController(IncidentService incidentService,
                               CurrentUserService currentUserService,
                               TechnicianRepository technicianRepository,
-                              AuditLogRepository auditLogRepository) {
+                              AuditLogRepository auditLogRepository,
+                              SlaService slaService) {
         this.incidentService = incidentService;
         this.currentUserService = currentUserService;
         this.technicianRepository = technicianRepository;
         this.auditLogRepository = auditLogRepository;
+        this.slaService = slaService;
     }
 
     // ===================== detail page =====================
@@ -61,6 +65,7 @@ public class IncidentController {
         model.addAttribute("incident", incident);
         model.addAttribute("history", auditLogRepository.findByIncidentIdOrderByTimestampAsc(id));
         model.addAttribute("backUrl", user.getRole().getDashboardPath());
+        model.addAttribute("slaStatus", slaService.statusOf(incident));
 
         // Which buttons to show. The page only shows an action if it makes sense
         // for this user and this status.

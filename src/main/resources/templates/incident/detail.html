@@ -20,6 +20,9 @@
             <span th:if="${incident.priority != null}" class="badge"
                   th:classappend="'priority-' + ${incident.priority}"
                   th:text="${incident.priority.name() + ' ' + incident.priority.label}">P1</span>
+            <span th:if="${slaStatus != null and slaStatus != 'NONE'}" class="badge"
+                  th:classappend="${slaStatus == 'BREACHED'} ? 'text-bg-danger' : (${slaStatus == 'AT_RISK'} ? 'text-bg-warning' : 'text-bg-success')"
+                  th:text="'SLA: ' + ${slaStatus}">SLA</span>
         </div>
     </div>
 

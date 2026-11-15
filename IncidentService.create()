@@ -1,2 +1,0 @@
-incident.applyPriority(priorityCalculator.calculate(incident));   // F2
-slaService.applyDeadlines(incident);                              // F4
