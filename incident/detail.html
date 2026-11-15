@@ -1,0 +1,4 @@
+<span th:if="${slaStatus != 'NONE'}" class="badge"
+      th:classappend="${slaStatus == 'BREACHED'} ? 'text-bg-danger'
+                    : (${slaStatus == 'AT_RISK'} ? 'text-bg-warning' : 'text-bg-success')"
+      th:text="'SLA: ' + ${slaStatus}">SLA</span>
